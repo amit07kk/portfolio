@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amitendra | Video Editor & Motion Designer</title>
+    <style>
+        /* --- VARIABLES --- */
+        :root {
+            --bg-base: #060608;
+            --bg-surface: #101014;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --primary: #00f3ff;
+            --primary-glow: rgba(0, 243, 255, 0.3);
+            --secondary: #ff00e5;
+            --secondary-glow: rgba(255, 0, 229, 0.3);
+            --tertiary: #7000ff;
+            --text-main: #ffffff;
+            --text-muted: #a0a0ab;
+            --border: rgba(255, 255, 255, 0.08);
+            --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* --- RESET & BASE --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
+        /* ===== POLYGON PARTICLE BACKGROUND (matches reference) ===== */
+        body { background-color: #060606; }
+        #bg-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; pointer-events: none; background: #060606;
+        }
+
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; }
+        img, video { max-width: 100%; display: block; }
+        button { cursor: pointer; font-family: inherit; border: none; background: none; }
+
+        /* Scroll-reveal */
+        .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+        .reveal.in-view { opacity: 1; transform: translateY(0); }
+        .reveal-scale { opacity: 0; transform: scale(0.85); transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.34,1.56,0.64,1); }
+        .reveal-scale.in-view { opacity: 1; transform: scale(1); }
+
+        /* --- HEADER --- */
+        header {
+            position: fixed; top: 0; left: 0; right: 0; display: flex;
+            justify-content: space-between; align-items: center; padding: 1.5rem 4rem; z-index: 100; transition: var(--transition);
+        }
+        header.scrolled {
+            background: rgba(6, 6, 8, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 1rem 4rem;
+        }
+        .logo {
+            font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px;
+            background: linear-gradient(90deg, var(--text-main), var(--primary), var(--secondary), var(--text-main));
+            background-size: 300% 100%;
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+            animation: text-shine 6s linear infinite;
+        }
+        @keyframes text-shine { 0% { background-position: 0% 50%; } 100% { background-position: 300% 50%; } }
+
+        nav { display: flex; align-items: center; gap: 2.5rem; }
+        .nav-links { display: flex; gap: 2rem; font-size: 0.9rem; font-weight: 500; color: var(--text-muted); }
+        .nav-links a { position: relative; }
+        .nav-links a::after {
+            content: ''; position: absolute; left: 0; bottom: -4px; width: 0; height: 1px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary)); transition: width 0.3s ease;
+        }
+        .nav-links a:hover { color: var(--text-main); text-shadow: 0 0 10px var(--primary-glow); }
+        .nav-links a:hover::after { width: 100%; }
+        .btn-nav {
+            background: var(--text-main); color: var(--bg-base); padding: 0.6rem 1.2rem;
+            border-radius: 4px; font-weight: 600; font-size: 0.9rem; transition: var(--transition);
+            position: relative; overflow: hidden;
+        }
+        .btn-nav:hover { background: var(--primary); box-shadow: 0 0 25px var(--primary-glow), 0 0 45px var(--secondary-glow); transform: translateY(-2px); }
+
+        /* --- HERO SECTION --- */
+        .hero { min-height: 100vh; display: flex; align-items: center; padding: 5rem 4rem 0; position: relative; }
+        .hero-content { flex: 1; max-width: 650px; z-index: 2; }
+        .hero-eyebrow {
+            display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; letter-spacing: 2px;
+            text-transform: uppercase; color: var(--primary); margin-bottom: 1rem; font-weight: 600;
+            opacity: 0; animation: fade-up 0.8s ease forwards 0.1s;
+        }
+        .hero-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 10px var(--primary); animation: pulse-dot 1.6s ease-in-out infinite; }
+        @keyframes pulse-dot { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.4); } }
+
+        .hero-name {
+            font-size: 4.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 0.5rem; letter-spacing: -2px;
+            position: relative; display: inline-block; cursor: default;
+            opacity: 0; animation: fade-up 0.9s ease forwards 0.25s;
+        }
+        .hero-name .glitch-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none;
+        }
+        .hero-name:hover .glitch-layer-1 { opacity: 0.7; color: var(--primary); animation: glitch-move 0.35s steps(2) infinite; clip-path: inset(0 0 55% 0); }
+        .hero-name:hover .glitch-layer-2 { opacity: 0.7; color: var(--secondary); animation: glitch-move 0.3s steps(2) infinite reverse; clip-path: inset(55% 0 0 0); }
+        @keyframes glitch-move {
+            0% { transform: translate(0,0); }
+            25% { transform: translate(-3px, 1px); }
+            50% { transform: translate(3px, -1px); }
+            75% { transform: translate(-2px, -2px); }
+            100% { transform: translate(0,0); }
+        }
+        @keyframes fade-up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+        .hero-title { font-size: 1.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 1.5rem; opacity: 0; animation: fade-up 0.9s ease forwards 0.4s; }
+        .hero-title span { color: var(--primary); margin: 0 0.5rem; display: inline-block; animation: spin-slow 5s linear infinite; }
+        @keyframes spin-slow { 100% { transform: rotate(360deg); } }
+
+        .hero-desc { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 2.5rem; max-width: 90%; opacity: 0; animation: fade-up 0.9s ease forwards 0.55s; }
+        .hero-actions { display: flex; gap: 1.5rem; align-items: center; opacity: 0; animation: fade-up 0.9s ease forwards 0.7s; }
+        .btn-primary {
+            background: var(--primary); color: var(--bg-base); padding: 1rem 2rem;
+            font-size: 1rem; font-weight: 600; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.5rem; transition: var(--transition);
+            position: relative; overflow: hidden; z-index: 1;
+        }
+        .btn-primary::before {
+            content: ''; position: absolute; inset: 0; z-index: -1;
+            background: linear-gradient(90deg, var(--secondary), var(--primary), var(--tertiary));
+            background-size: 250% 100%; opacity: 0; transition: opacity 0.3s ease; animation: text-shine 4s linear infinite;
+        }
+        .btn-primary:hover::before { opacity: 1; }
+        .btn-primary:hover { box-shadow: 0 0 30px var(--primary-glow), 0 0 60px var(--secondary-glow); transform: translateY(-3px); }
+        .btn-secondary { color: var(--text-main); font-weight: 500; border-bottom: 1px solid var(--text-main); padding-bottom: 2px; transition: var(--transition); }
+        .btn-secondary:hover { color: var(--primary); border-color: var(--primary); text-shadow: 0 0 12px var(--primary-glow); }
+
+        /* Hero Right Visuals */
+        .hero-visual { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; }
+        .profile-container {
+            width: 380px;
+            display: flex; justify-content: center; align-items: center; position: relative;
+            z-index: 2; animation: float-profile 5s ease-in-out infinite;
+        }
+        .profile-container::before {
+            content: ''; position: absolute; inset: -20px; border-radius: 50%;
+            background: conic-gradient(from 0deg, var(--primary), var(--secondary), var(--tertiary), var(--primary));
+            filter: blur(50px); opacity: 0.35; z-index: -1; animation: spin-slow 8s linear infinite;
+        }
+        @keyframes float-profile { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-18px) rotate(1.5deg); } }
+
+        .profile-container img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 30px rgba(0, 243, 255, 0.15));
+        }
+
+        /* Abstract Elements */
+        .abstract-el { position: absolute; z-index: 1; opacity: 0.7; animation: float 6s ease-in-out infinite; }
+        .abs-play {
+            top: 15%; right: 10%; width: 50px; height: 50px; border-radius: 50%; border: 2px solid rgba(0,243,255,0.3);
+            display: flex; justify-content: center; align-items: center; animation-delay: 1s; box-shadow: 0 0 15px var(--primary-glow);
+        }
+        .abs-play::after { content: ''; width: 0; height: 0; border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-left: 12px solid var(--primary); margin-left: 4px; }
+        .abs-timeline { bottom: 20%; left: -5%; display: flex; flex-direction: column; gap: 4px; animation-delay: 0.5s; }
+        .abs-timeline div { height: 2px; background: rgba(255,255,255,0.15); width: 80px; }
+        .abs-timeline div:nth-child(2) { width: 50px; background: var(--primary); animation: bar-pulse 2s ease-in-out infinite; }
+        .abs-timeline div:nth-child(3) { width: 100px; }
+        .abs-ring {
+            top: 65%; right: 25%; width: 70px; height: 70px; border-radius: 50%;
+            border: 1px dashed rgba(255,0,229,0.35); animation: spin-slow 12s linear infinite;
+        }
+        .abs-dot { top: 8%; left: 20%; width: 10px; height: 10px; border-radius: 50%; background: var(--secondary); box-shadow: 0 0 15px var(--secondary-glow); animation: pulse-dot 2.2s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
+        @keyframes bar-pulse { 0%, 100% { width: 50px; opacity: 1; } 50% { width: 70px; opacity: 0.6; } }
+
+        /* Socials */
+        .social-sidebar { position: absolute; left: 2rem; bottom: 4rem; display: flex; flex-direction: column; gap: 1.5rem; }
+        .social-sidebar a { color: var(--text-muted); font-size: 0.9rem; writing-mode: vertical-rl; transform: rotate(180deg); transition: var(--transition); letter-spacing: 1px; }
+        .social-sidebar a:hover { color: var(--primary); text-shadow: 0 0 10px var(--primary-glow); }
+        .social-sidebar::before { content: ''; width: 1px; height: 60px; background: var(--border); margin: 0 auto; }
+
+        /* --- PROJECTS SECTION --- */
+        .section { padding: 6rem 4rem; max-width: 1400px; margin: 0 auto; position: relative; }
+        .section-header { margin-bottom: 3rem; text-align: center; }
+        .section-title h2 {
+            font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, var(--text-main), var(--primary));
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+        }
+        .section-title p { color: var(--text-muted); }
+
+        /* Row Layout */
+        .project-grid {
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 2.5rem;
+            padding: 2rem 0;
+        }
+
+        .project-card {
+            width: 100%;
+            max-width: 240px;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+            transition: var(--transition); cursor: pointer; display: flex; flex-direction: column;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            position: relative;
+        }
+        .project-card::before {
+            content: ''; position: absolute; inset: -1px; border-radius: 12px; padding: 1px; z-index: -1;
+            background: conic-gradient(from 0deg, var(--primary), var(--secondary), var(--tertiary), var(--primary));
+            opacity: 0; transition: opacity 0.4s ease;
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor; mask-composite: exclude;
+            animation: spin-slow 6s linear infinite;
+        }
+        .project-card:hover::before { opacity: 1; }
+        .project-card:hover { border-color: rgba(0, 243, 255, 0.4); box-shadow: 0 15px 50px rgba(0,243,255,0.2), 0 15px 50px rgba(255,0,229,0.1); transform: translateY(-8px); }
+
+        /* 9:16 Aspect Ratio and Local Video */
+        .card-visual { aspect-ratio: 9 / 16; background: #1a1a20; position: relative; overflow: hidden; }
+
+        .card-visual video { width: 100%; height: 100%; object-fit: cover; }
+
+        .play-overlay { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; background: rgba(6, 6, 8, 0.5); transition: var(--transition); z-index: 2;}
+        .play-btn-ui { width: 50px; height: 50px; background: rgba(0, 243, 255, 0.95); border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 20px var(--primary-glow); transition: var(--transition); animation: pulse-ring 2s ease-in-out infinite; }
+        .play-btn-ui::after { content: ''; width: 0; height: 0; border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-left: 12px solid var(--bg-base); margin-left: 4px; }
+        @keyframes pulse-ring { 0%, 100% { box-shadow: 0 0 20px var(--primary-glow); } 50% { box-shadow: 0 0 35px var(--primary-glow), 0 0 55px var(--secondary-glow); } }
+
+        .project-card:hover .play-overlay { background: rgba(6, 6, 8, 0.3); }
+        .project-card:hover .play-btn-ui { transform: scale(1.15); }
+
+        .card-content { padding: 1rem; text-align: left; }
+        .card-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+        .card-category { color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; font-size: 0.7rem;}
+        .card-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.3rem; }
+        .card-software { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.6rem; }
+        .card-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0; line-height: 1.4; }
+
+        /* --- DUAL IDENTITY BANNER --- */
+        .identity-banner { width: 100%; padding: 2rem 0; background: var(--bg-surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); overflow: hidden; display: flex; white-space: nowrap; position: relative; }
+        .identity-banner::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(90deg, var(--bg-surface), transparent 10%, transparent 90%, var(--bg-surface));
+            pointer-events: none;
+        }
+        .identity-track { display: flex; gap: 2rem; font-size: 2.5rem; font-weight: 800; color: rgba(255,255,255,0.05); animation: scroll-left 20s linear infinite; }
+        .identity-track span { color: var(--primary); opacity: 0.6; display: inline-block; animation: color-cycle 4s ease-in-out infinite; }
+        .identity-track span:nth-child(4n) { animation-delay: 0.5s; color: var(--secondary); }
+        .identity-track span:nth-child(4n+2) { animation-delay: 1s; color: var(--tertiary); }
+        @keyframes scroll-left { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        @keyframes color-cycle { 0%, 100% { opacity: 0.4; transform: scale(1); } 50% { opacity: 1; transform: scale(1.15); } }
+
+        /* --- ABOUT / SKILLS --- */
+        .about-section { display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 800px; margin: 0 auto; }
+        .about-text h3 {
+            font-size: 2.5rem; margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, var(--text-main), var(--secondary), var(--primary), var(--text-main));
+            background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+            animation: text-shine 8s linear infinite;
+        }
+        .about-text p { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 1.1rem; line-height: 1.8; }
+
+        .skills-container { margin-top: 2rem; }
+        .skill-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
+        .skill-tag { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 0.8rem 1.5rem; border-radius: 30px; font-size: 0.95rem; color: var(--text-main); transition: var(--transition); }
+        .skill-tag:hover { border-color: var(--primary); background: rgba(0,243,255,0.08); box-shadow: 0 4px 25px rgba(0, 243, 255, 0.25); transform: translateY(-4px) scale(1.05); }
+
+        /* --- CONTACT --- */
+        .contact-section { text-align: center; padding: 8rem 2rem; background: linear-gradient(to bottom, transparent, rgba(0, 243, 255, 0.02)); position: relative; overflow: hidden; }
+        .contact-title { font-size: 3.5rem; font-weight: 700; margin-bottom: 1rem; letter-spacing: -1px; }
+        .contact-subtitle { font-size: 1.5rem; color: var(--text-muted); margin-bottom: 3rem; }
+        .btn-large {
+            font-size: 1.2rem; padding: 1.2rem 3rem; background: var(--text-main); color: var(--bg-base); border-radius: 4px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: var(--transition);
+            position: relative; overflow: hidden; z-index: 1;
+        }
+        .btn-large::before {
+            content: ''; position: absolute; inset: 0; z-index: -1; opacity: 0; transition: opacity 0.3s ease;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--tertiary));
+            background-size: 250% 100%; animation: text-shine 4s linear infinite;
+        }
+        .btn-large:hover::before { opacity: 1; }
+        .btn-large:hover { box-shadow: 0 0 40px var(--primary-glow), 0 0 70px var(--secondary-glow); transform: scale(1.05); color: var(--bg-base); }
+
+        /* --- FOOTER --- */
+        footer { padding: 3rem 4rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; color: var(--text-muted); }
+        .footer-left strong { color: var(--text-main); font-size: 1.1rem; display: block; margin-bottom: 0.2rem; }
+        .footer-socials { display: flex; gap: 1.5rem; }
+        .footer-socials a:hover { color: var(--primary); text-shadow: 0 0 10px var(--primary-glow); }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 1024px) {
+            .hero { flex-direction: column; justify-content: center; text-align: center; gap: 4rem; padding: 6rem 2rem 2rem; }
+            .hero-content { margin: 0 auto; }
+            .hero-desc { margin: 0 auto 2.5rem; }
+            .hero-actions { justify-content: center; }
+            .social-sidebar { display: none; }
+        }
+        @media (max-width: 768px) {
+            header, header.scrolled { padding: 1rem 2rem; }
+            .nav-links { display: none; }
+            .hero-name { font-size: 3rem; }
+            .hero-title { font-size: 1.2rem; }
+            .profile-container { width: 300px; height: auto; }
+            .section { padding: 4rem 2rem; }
+            .project-grid { justify-content: center; }
+            .contact-title { font-size: 2.5rem; }
+            footer { flex-direction: column; gap: 1.5rem; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ANIMATED BACKGROUND: floating dark polygons + cursor spark burst -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- HEADER -->
+    <header id="navbar">
+        <a href="#" class="logo">Amitendra</a>
+        <nav>
+            <div class="nav-links">
+                <a href="#work">Work</a>
+                <a href="#about">About</a>
+                <a href="#contact">Contact</a>
+            </div>
+            <a href="#work" class="btn-nav">View Reel</a>
+        </nav>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero" id="home">
+        <!-- REPLACE SOCIAL LINKS HERE -->
+        <div class="social-sidebar">
+            <a href="YOUR_INSTAGRAM_LINK" target="_blank">Instagram</a>
+            <a href="YOUR_LINKEDIN_LINK" target="_blank">LinkedIn</a>
+        </div>
+
+        <div class="hero-content">
+            <div class="hero-eyebrow"><span class="dot"></span>Available for freelance work</div>
+            <h1 class="hero-name">
+                Amitendra
+                <span class="glitch-layer glitch-layer-1" aria-hidden="true">Amitendra</span>
+                <span class="glitch-layer glitch-layer-2" aria-hidden="true">Amitendra</span>
+            </h1>
+            <h2 class="hero-title">Video Editor <span>×</span> Motion Designer</h2>
+            <p class="hero-desc">I craft engaging visual content designed for high retention. Through precise cuts, dynamic motion graphics, and sound design, I turn raw footage into powerful digital narratives.</p>
+            <div class="hero-actions">
+                <a href="#work" class="btn-primary">Watch My Reel &rarr;</a>
+                <a href="mailto:YOUR_EMAIL@example.com" class="btn-secondary">Contact Me</a>
+            </div>
+        </div>
+
+        <div class="hero-visual">
+            <div class="abstract-el abs-play"></div>
+            <div class="abstract-el abs-timeline">
+                <div></div><div></div><div></div>
+            </div>
+            <div class="abstract-el abs-ring"></div>
+            <div class="abstract-el abs-dot"></div>
+
+            <div class="profile-container">
+                <img src="my_photo.png" alt="Amitendra Profile">
+            </div>
+        </div>
+    </section>
+
+    <!-- WORK / PROJECTS SECTION -->
+    <section class="section" id="work">
+        <div class="section-header reveal">
+            <div class="section-title">
+                <h2>Featured Reel</h2>
+                <p>High-retention short form edit</p>
+            </div>
+        </div>
+
+        <!-- LEFT ALIGNED GRID -->
+        <div class="project-grid">
+
+            <!-- VIDEO 1 -->
+            <div class="project-card reveal-scale" onclick="playVideo(this)">
+                <div class="card-visual">
+                    <video src="video_1.mp4" playsinline preload="metadata"></video>
+                    <!-- Play button overlay -->
+                    <div class="play-overlay"><div class="play-btn-ui"></div></div>
+                </div>
+                <div class="card-content">
+                    <div class="card-meta">
+                        <span class="card-category">Short Form Edit</span>
+                    </div>
+                    <h3 class="card-title">Small details, Big difference</h3>
+                    <div class="card-software">Premiere Pro · After Effects</div>
+                    <p class="card-desc">Just keep learning, keep building, and keep improving</p>
+                </div>
+            </div>
+
+            <!-- VIDEO 2 (NEW ADDED) -->
+            <div class="project-card reveal-scale" onclick="playVideo(this)">
+                <div class="card-visual">
+
+                    <!-- 👇 YAHA PAR "video 2 ka locatin daalo" KO HATA KAR APNI VIDEO KA NAAM LIKHNA HAI 👇 -->
+                    <video src="spiderman.mp4" playsinline preload="metadata"></video>
+
+                    <!-- Play button overlay -->
+                    <div class="play-overlay"><div class="play-btn-ui"></div></div>
+                </div>
+                <div class="card-content">
+                    <div class="card-meta">
+                        <span class="card-category">Visual Story</span>
+                    </div>
+                    <h3 class="card-title">Cinematic Edit</h3>
+                    <div class="card-software">DaVinci Resolve · After Effects</div>
+                    <p class="card-desc">Smooth transitions and color grading.</p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- BANNER -->
+    <div class="identity-banner">
+        <div class="identity-track">
+            EDIT <span>×</span> MOTION <span>×</span> COLOR <span>×</span> STORY <span>×</span>
+            EDIT <span>×</span> MOTION <span>×</span> COLOR <span>×</span> STORY <span>×</span>
+            EDIT <span>×</span> MOTION <span>×</span> COLOR <span>×</span> STORY <span>×</span>
+            EDIT <span>×</span> MOTION <span>×</span> COLOR <span>×</span> STORY <span>×</span>
+        </div>
+    </div>
+
+    <!-- ABOUT SECTION -->
+    <section class="section" id="about">
+        <div class="about-section reveal">
+            <div class="about-text">
+                <h3>The Creative Process</h3>
+                <p>I thrive at the intersection of visual storytelling and dynamic pacing. I believe that a good edit shouldn't just look visually pleasing—it should hold the viewer's attention from the very first frame to the last.</p>
+                <p>Whether it's syncing beats, animating custom pop-up graphics, or applying cinematic color grades, my goal is to deliver polished content that stands out on any feed.</p>
+            </div>
+
+            <div class="skills-container">
+                <div class="skill-tags">
+                    <span class="skill-tag">Video Editing</span>
+                    <span class="skill-tag">Motion Graphics</span>
+                    <span class="skill-tag">Color Grading</span>
+                    <span class="skill-tag">Sound Design</span>
+                    <span class="skill-tag">Premiere Pro</span>
+                    <span class="skill-tag">After Effects</span>
+                    <span class="skill-tag">DaVinci Resolve</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT SECTION -->
+    <section class="contact-section" id="contact">
+        <h2 class="contact-title reveal">Need a video edited?</h2>
+        <p class="contact-subtitle reveal">Let's create high-performing content together.</p>
+        <a href="mailto:YOUR_EMAIL@example.com" class="btn-large reveal-scale">Contact Me &rarr;</a>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-left">
+            <strong>Amitendra</strong> Video Editor & Motion Designer
+        </div>
+        <div class="footer-socials">
+            <a href="YOUR_INSTAGRAM_LINK" target="_blank">Instagram</a>
+            <a href="YOUR_LINKEDIN_LINK" target="_blank">LinkedIn</a>
+        </div>
+        <div class="footer-right">
+            &copy; 2026 Amitendra
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        // Navbar Scroll Effect
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('navbar');
+            if (window.scrollY > 50) header.classList.add('scrolled');
+            else header.classList.remove('scrolled');
+        });
+
+        // Video Play Function
+        function playVideo(cardElement) {
+            const video = cardElement.querySelector('video');
+            const overlay = cardElement.querySelector('.play-overlay');
+
+            if (video.paused) {
+                video.play();
+                video.setAttribute('controls', 'controls'); // Controls add karega (Pause, Mute, Seek)
+                overlay.style.display = 'none'; // Play button ko hide kar dega
+            }
+        }
+
+        // Scroll reveal via IntersectionObserver
+        const revealEls = document.querySelectorAll('.reveal, .reveal-scale');
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('in-view');
+                    io.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15 });
+        revealEls.forEach(el => io.observe(el));
+
+        // Floating dark polygon field + cinematic cursor interaction
+        (function () {
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+            let w, h, shapes, sparks = [], rings = [], streaks = [];
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            function resize() {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            const PALETTE = ['0, 243, 255', '255, 0, 229', '112, 0, 255'];
+
+            /* ---- floating polygon / circle shapes, drifting slowly upward ---- */
+            const SHAPE_COUNT = Math.min(46, Math.floor((window.innerWidth * window.innerHeight) / 26000));
+            const shapeTypes = ['circle', 'triangle', 'square', 'pentagon', 'hexagon'];
+
+            function makeShape(randomY) {
+                const sides = shapeTypes[Math.floor(Math.random() * shapeTypes.length)];
+                const size = Math.random() * 70 + 30;
+                return {
+                    x: Math.random() * w,
+                    y: randomY ? Math.random() * h : h + size + Math.random() * 200,
+                    baseX: 0,
+                    ox: 0, oy: 0, // magnetic offset from cursor repulsion
+                    size,
+                    type: sides,
+                    rot: Math.random() * Math.PI * 2,
+                    rotSpeed: (Math.random() - 0.5) * 0.0025,
+                    vy: -(Math.random() * 0.18 + 0.05),
+                    vx: (Math.random() - 0.5) * 0.12,
+                    opacity: Math.random() * 0.07 + 0.035
+                };
+            }
+            shapes = Array.from({ length: SHAPE_COUNT }, () => makeShape(true));
+
+            function drawPolygon(cx, cy, radius, sides, rotation) {
+                ctx.beginPath();
+                for (let i = 0; i < sides; i++) {
+                    const angle = rotation + (i / sides) * Math.PI * 2;
+                    const px = cx + radius * Math.cos(angle);
+                    const py = cy + radius * Math.sin(angle);
+                    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+                }
+                ctx.closePath();
+            }
+
+            function drawShape(s) {
+                const dx = s.x - cursor.x, dy = s.y - cursor.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const field = 180;
+                let px = s.x, py = s.y;
+                if (dist < field && cursor.active) {
+                    const force = (1 - dist / field) * 26;
+                    px += (dx / (dist || 1)) * force;
+                    py += (dy / (dist || 1)) * force;
+                }
+                ctx.save();
+                ctx.fillStyle = `rgba(255,255,255,${s.opacity})`;
+                if (s.type === 'circle') {
+                    ctx.beginPath();
+                    ctx.arc(px, py, s.size / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    const sideCount = s.type === 'triangle' ? 3 : s.type === 'square' ? 4 : s.type === 'pentagon' ? 5 : 6;
+                    drawPolygon(px, py, s.size / 2, sideCount, s.rot);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            /* ---- cursor state: real position + eased "comet" position ---- */
+            const cursor = { x: -1000, y: -1000, ex: -1000, ey: -1000, active: false };
+            let lastMouseX = -1000, lastMouseY = -1000, lastEmit = 0;
+
+            function emitSparks(x, y, count, speedMul, spread) {
+                for (let i = 0; i < count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = (Math.random() * 1.6 + 0.3) * speedMul;
+                    sparks.push({
+                        x, y,
+                        vx: Math.cos(angle) * speed * spread,
+                        vy: Math.sin(angle) * speed * spread - 0.15,
+                        r: Math.random() * 2.4 + 0.9,
+                        life: 1,
+                        decay: Math.random() * 0.01 + 0.006,
+                        color: PALETTE[Math.floor(Math.random() * PALETTE.length)]
+                    });
+                }
+                if (sparks.length > 420) sparks.splice(0, sparks.length - 420);
+            }
+
+            function updateCursor(x, y) {
+                cursor.x = x; cursor.y = y; cursor.active = true;
+                const dx = x - lastMouseX, dy = y - lastMouseY;
+                const moved = Math.sqrt(dx * dx + dy * dy);
+
+                // trailing streak segment for the comet tail
+                streaks.push({ x, y, life: 1 });
+                if (streaks.length > 26) streaks.shift();
+
+                // spark density scales with movement speed = more cinematic on fast swipes
+                const count = Math.min(6, Math.max(1, Math.floor(moved / 4)));
+                emitSparks(x, y, count, 1, Math.min(2.2, 0.4 + moved / 30));
+
+                // occasional shockwave ring while moving briskly
+                const now = performance.now();
+                if (moved > 18 && now - lastEmit > 90) {
+                    rings.push({ x, y, r: 4, life: 1, color: PALETTE[Math.floor(Math.random() * PALETTE.length)] });
+                    lastEmit = now;
+                }
+
+                lastMouseX = x; lastMouseY = y;
+            }
+
+            window.addEventListener('mousemove', (e) => updateCursor(e.clientX, e.clientY));
+            window.addEventListener('touchmove', (e) => {
+                if (e.touches[0]) updateCursor(e.touches[0].clientX, e.touches[0].clientY);
+            }, { passive: true });
+            window.addEventListener('mouseleave', () => { cursor.active = false; });
+
+            // click = big radial burst + shockwave, for extra cinematic punch
+            window.addEventListener('mousedown', (e) => {
+                emitSparks(e.clientX, e.clientY, 34, 2.4, 1.6);
+                rings.push({ x: e.clientX, y: e.clientY, r: 6, life: 1, color: PALETTE[0] });
+                rings.push({ x: e.clientX, y: e.clientY, r: 6, life: 1, color: PALETTE[1] });
+            });
+
+            function step() {
+                ctx.clearRect(0, 0, w, h);
+
+                // ease the comet center toward the real cursor
+                cursor.ex += (cursor.x - cursor.ex) * 0.16;
+                cursor.ey += (cursor.y - cursor.ey) * 0.16;
+
+                // floating polygons (with magnetic repulsion near cursor)
+                for (const s of shapes) {
+                    s.y += s.vy;
+                    s.x += s.vx;
+                    s.rot += s.rotSpeed;
+                    if (s.y < -s.size - 50) Object.assign(s, makeShape(false));
+                    if (s.x < -80) s.x = w + 80;
+                    if (s.x > w + 80) s.x = -80;
+                    drawShape(s);
+                }
+
+                // comet tail: fading streak line behind the eased cursor
+                if (cursor.active && streaks.length > 1) {
+                    ctx.save();
+                    ctx.lineCap = 'round';
+                    for (let i = 1; i < streaks.length; i++) {
+                        const a = streaks[i - 1], b = streaks[i];
+                        const t = i / streaks.length;
+                        ctx.beginPath();
+                        ctx.moveTo(a.x, a.y);
+                        ctx.lineTo(b.x, b.y);
+                        ctx.strokeStyle = `rgba(0,243,255,${t * 0.35})`;
+                        ctx.lineWidth = t * 3;
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                }
+
+                // soft dark blob + glowing halo under the eased cursor
+                if (cursor.active) {
+                    const grad = ctx.createRadialGradient(cursor.ex, cursor.ey, 0, cursor.ex, cursor.ey, 60);
+                    grad.addColorStop(0, 'rgba(0,0,0,0.55)');
+                    grad.addColorStop(0.5, 'rgba(0,243,255,0.05)');
+                    grad.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(cursor.ex, cursor.ey, 60, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // expanding shockwave rings
+                for (let i = rings.length - 1; i >= 0; i--) {
+                    const r = rings[i];
+                    r.r += 3.2;
+                    r.life -= 0.02;
+                    if (r.life <= 0) { rings.splice(i, 1); continue; }
+                    ctx.beginPath();
+                    ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(${r.color}, ${r.life * 0.45})`;
+                    ctx.lineWidth = 1.4;
+                    ctx.stroke();
+                }
+
+                // glowing spark particles bursting from cursor movement
+                ctx.save();
+                for (let i = sparks.length - 1; i >= 0; i--) {
+                    const p = sparks[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vx *= 0.97;
+                    p.vy *= 0.97;
+                    p.life -= p.decay;
+                    if (p.life <= 0) { sparks.splice(i, 1); continue; }
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = `rgba(${p.color}, ${p.life})`;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${p.color}, ${p.life * 0.85})`;
+                    ctx.fill();
+                }
+                ctx.restore();
+
+                // faint connecting lines between nearby sparks (spray-network look)
+                for (let i = 0; i < sparks.length; i++) {
+                    for (let j = i + 1; j < sparks.length; j++) {
+                        const a = sparks[i], b = sparks[j];
+                        const dx = a.x - b.x, dy = a.y - b.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 36) {
+                            ctx.beginPath();
+                            ctx.moveTo(a.x, a.y);
+                            ctx.lineTo(b.x, b.y);
+                            ctx.strokeStyle = `rgba(0,243,255,${0.12 * Math.min(a.life, b.life) * (1 - dist / 36)})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                // fade the streak trail points over time
+                streaks.forEach(s => s.life -= 0.05);
+
+                if (!reduceMotion) requestAnimationFrame(step);
+            }
+            step();
+        })();
+    </script>
+</body>
+</html>
+
